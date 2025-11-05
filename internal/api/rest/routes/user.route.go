@@ -3,6 +3,7 @@ package routes
 import (
 	"go-ecommerce-app/internal/api/rest"
 	"go-ecommerce-app/internal/controllers"
+	functions "go-ecommerce-app/internal/db.functions"
 	"go-ecommerce-app/internal/dto"
 	"net/http"
 
@@ -16,7 +17,9 @@ type userHandler struct {
 func UserRoutes(restHand *rest.RestHandler) {
 	app := restHand.App
 
-	services := controllers.UserContoller{}
+	services := controllers.UserContoller{
+		DB: functions.InitializeUserDBFunction(restHand.DB),
+	}
 	handler := userHandler{Controllers: services}
 
 	user := app.Group("/user")

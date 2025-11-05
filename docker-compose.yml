@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:latest
+    restart: always
+    environment:
+      - POSTGRES_USER=magwach
+      - POSTGRES_PASSWORD=!Magwach_254
+      - POSTGRES_DB=go_ecommerce_app
+    ports:
+      - "5432:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+volumes:
+  db:
+    driver: local

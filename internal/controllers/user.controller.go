@@ -1,23 +1,44 @@
 package controllers
 
 import (
-	"go-ecommerce-app/internal/dormain"
+	"errors"
+	functions "go-ecommerce-app/internal/db.functions"
 	"go-ecommerce-app/internal/dto"
+	"go-ecommerce-app/internal/schema"
 	"log"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
-type UserContoller struct{}
+type UserContoller struct {
+	DB functions.UserDBFunction
+}
 
 func (s UserContoller) SignUp(input dto.UserSignUp) (string, error) {
 
 	log.Println(input)
 
-	return "test-token", nil
+	hashedPassword, err := hashPassword(input.Password)
+
+	if err != nil {
+		return "", errors.New("failed to hash password")
+	}
+
+	_, err = s.DB.SignUp(schema.User{
+		Email:    input.Email,
+		Password: hashedPassword,
+		Phone:    input.Phone,
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	return hashedPassword, nil
 }
 
-func (s UserContoller) FindUserByEmail(email string) (*dormain.User, error) {
+func (s UserContoller) FindUserByEmail(email string) (*schema.User, error) {
 	return nil, nil
 }
 
@@ -25,11 +46,11 @@ func (s UserContoller) Login(input any) (string, error) {
 	return "", nil
 }
 
-func (s UserContoller) GetVerificationCode(u *dormain.User) (int, error) {
+func (s UserContoller) GetVerificationCode(u *schema.User) (int, error) {
 	return 0, nil
 }
 
-func (s UserContoller) VerifyCode(u *dormain.User) error {
+func (s UserContoller) VerifyCode(u *schema.User) error {
 	return nil
 }
 
@@ -37,7 +58,7 @@ func (s UserContoller) CreateProfile(id uuid.UUID, input any) error {
 	return nil
 }
 
-func (s UserContoller) GetProfile(id uuid.UUID) (*dormain.User, error) {
+func (s UserContoller) GetProfile(id uuid.UUID) (*schema.User, error) {
 	return nil, nil
 }
 
@@ -49,22 +70,27 @@ func (s UserContoller) BecomeSeller(id uuid.UUID, input any) (string, error) {
 	return "", nil
 }
 
-func (s UserContoller) FindCart(id uuid.UUID) (*dormain.Cart, error) {
+func (s UserContoller) FindCart(id uuid.UUID) (*schema.Cart, error) {
 	return nil, nil
 }
 
-func (s UserContoller) CreateCart(input any, u *dormain.User) (*dormain.Cart, error) {
+func (s UserContoller) CreateCart(input any, u *schema.User) (*schema.Cart, error) {
 	return nil, nil
 }
 
-func (s UserContoller) CreateOrder(u *dormain.User) (int, error) {
+func (s UserContoller) CreateOrder(u *schema.User) (int, error) {
 	return 0, nil
 }
 
-func (s UserContoller) GetOrders(u *dormain.User) (*dormain.Cart, error) {
+func (s UserContoller) GetOrders(u *schema.User) (*schema.Cart, error) {
 	return nil, nil
 }
 
-func (s UserContoller) GetOrderById(id, UserId uuid.UUID) (*dormain.Cart, error) {
+func (s UserContoller) GetOrderById(id, UserId uuid.UUID) (*schema.Cart, error) {
 	return nil, nil
+}
+
+func hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(bytes), err
 }
