@@ -4,6 +4,7 @@ import (
 	"go-ecommerce-app/configs"
 	"go-ecommerce-app/internal/api/rest"
 	"go-ecommerce-app/internal/api/rest/routes"
+	"go-ecommerce-app/internal/helper"
 	"go-ecommerce-app/internal/schema"
 	"log"
 
@@ -15,6 +16,8 @@ import (
 func StartServer(cfg configs.AppConfig) {
 	port := cfg.ServerPort
 	app := fiber.New()
+
+	auth := helper.InitializeAuth(cfg.Secret)
 
 	db, err := gorm.Open(postgres.Open(cfg.DSN), &gorm.Config{})
 
@@ -33,8 +36,9 @@ func StartServer(cfg configs.AppConfig) {
 	v1Routes.Get("/health", healthCheck)
 
 	rh := &rest.RestHandler{
-		App: v1Routes,
-		DB:  db,
+		App:  v1Routes,
+		DB:   db,
+		Auth: auth,
 	}
 
 	setupRoutes(rh)

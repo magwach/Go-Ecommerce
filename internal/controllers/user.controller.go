@@ -11,10 +11,15 @@ import (
 )
 
 type UserContoller struct {
-	DB functions.UserDBFunction
+	DB   functions.UserDBFunction
+	Auth helper.Auth
 }
 
 func (s UserContoller) SignUp(input dto.UserSignUp) (string, error) {
+
+	if len(input.Password) < 6 {
+		return "", errors.New("password is too short")
+	}
 
 	hashedPassword, err := helper.HashPassword(input.Password)
 
@@ -22,7 +27,7 @@ func (s UserContoller) SignUp(input dto.UserSignUp) (string, error) {
 		return "", errors.New("failed to hash password")
 	}
 
-	_, err = s.DB.SignUp(schema.User{
+	user, err := s.DB.SignUp(schema.User{
 		Email:    input.Email,
 		Password: hashedPassword,
 		Phone:    input.Phone,
@@ -32,7 +37,16 @@ func (s UserContoller) SignUp(input dto.UserSignUp) (string, error) {
 		return "", err
 	}
 
-	return hashedPassword, nil
+	token, err := s.Auth.GenerateJWT(helper.JWTRequirements{
+		UserID: user.ID,
+		Email:  user.Email,
+		Role:   user.UserType,
+	})
+
+	if err != nil {
+		return "", err
+	}
+	return token, nil
 }
 
 func (s UserContoller) FindUserByEmail(email string) (*schema.User, error) {
@@ -60,7 +74,16 @@ func (s UserContoller) Login(email, password string) (string, error) {
 		return "", errors.New("invalid credentials")
 	}
 
-	return "", nil
+	token, err := s.Auth.GenerateJWT(helper.JWTRequirements{
+		UserID: user.ID,
+		Email:  user.Email,
+		Role:   user.UserType,
+	})
+
+	if err != nil {
+		return "", err
+	}
+	return token, nil
 }
 
 func (s UserContoller) GetVerificationCode(u *schema.User) (int, error) {
