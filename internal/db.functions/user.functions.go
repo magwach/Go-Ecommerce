@@ -7,11 +7,12 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type UserDBFunction interface {
 	SignUp(user schema.User) (schema.User, error)
-	FindUser(email string) (schema.User, error)
+	FindUserByEmail(email string) (schema.User, error)
 	FindUserById(id uuid.UUID) (schema.User, error)
 	UpdateUser(id uuid.UUID, user schema.User) (schema.User, error)
 }
@@ -38,14 +39,46 @@ func (r userDBFunction) SignUp(user schema.User) (schema.User, error) {
 	return user, nil
 }
 
-func (r userDBFunction) FindUser(email string) (schema.User, error) {
-	return schema.User{}, nil
+func (r userDBFunction) FindUserByEmail(email string) (schema.User, error) {
+
+	var user schema.User
+
+	err := r.db.First(&user, "email = ?", email).Error
+
+	if err != nil {
+		log.Printf("error in finding user: %v", err)
+		return schema.User{}, errors.New("user doesn't exist")
+	}
+
+	return user, nil
 }
 
 func (r userDBFunction) FindUserById(id uuid.UUID) (schema.User, error) {
-	return schema.User{}, nil
+	var user schema.User
+
+	err := r.db.First(&user, "id = ?", id).Error
+
+	if err != nil {
+		log.Printf("error in finding user: %v", err)
+		return schema.User{}, errors.New("user doesn't exist")
+	}
+
+	return user, nil
 }
 
 func (r userDBFunction) UpdateUser(id uuid.UUID, user schema.User) (schema.User, error) {
-	return schema.User{}, nil
+	err := r.db.First(&user, "id = ?", id).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return schema.User{}, errors.New("user not found")
+		}
+		return schema.User{}, err
+	}
+
+	err = r.db.Model(&user).Clauses(clause.Returning{}).Where("id = ?", id).Updates(user).Error
+	if err != nil {
+		return schema.User{}, errors.New("failed to update user")
+	}
+
+	return user, nil
 }

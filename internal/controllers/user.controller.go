@@ -4,11 +4,10 @@ import (
 	"errors"
 	functions "go-ecommerce-app/internal/db.functions"
 	"go-ecommerce-app/internal/dto"
+	"go-ecommerce-app/internal/helper"
 	"go-ecommerce-app/internal/schema"
-	"log"
 
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserContoller struct {
@@ -17,9 +16,7 @@ type UserContoller struct {
 
 func (s UserContoller) SignUp(input dto.UserSignUp) (string, error) {
 
-	log.Println(input)
-
-	hashedPassword, err := hashPassword(input.Password)
+	hashedPassword, err := helper.HashPassword(input.Password)
 
 	if err != nil {
 		return "", errors.New("failed to hash password")
@@ -39,10 +36,30 @@ func (s UserContoller) SignUp(input dto.UserSignUp) (string, error) {
 }
 
 func (s UserContoller) FindUserByEmail(email string) (*schema.User, error) {
-	return nil, nil
+
+	user, err := s.DB.FindUserByEmail(email)
+
+	if err != nil {
+		return &schema.User{}, err
+	}
+
+	return &user, nil
 }
 
-func (s UserContoller) Login(input any) (string, error) {
+func (s UserContoller) Login(email, password string) (string, error) {
+
+	user, err := s.DB.FindUserByEmail(email)
+
+	if err != nil {
+		return "", errors.New("user not found")
+	}
+
+	valid := helper.CheckPassword(user.Password, password)
+
+	if !valid {
+		return "", errors.New("invalid credentials")
+	}
+
 	return "", nil
 }
 
@@ -88,9 +105,4 @@ func (s UserContoller) GetOrders(u *schema.User) (*schema.Cart, error) {
 
 func (s UserContoller) GetOrderById(id, UserId uuid.UUID) (*schema.Cart, error) {
 	return nil, nil
-}
-
-func hashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	return string(bytes), err
 }

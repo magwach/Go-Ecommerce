@@ -57,15 +57,35 @@ func (h *userHandler) SignUp(ctx *fiber.Ctx) error {
 			"message": "Error trying to signup",
 		})
 	}
-	return ctx.Status(http.StatusOK).JSON(&fiber.Map{
+	return ctx.Status(http.StatusCreated).JSON(&fiber.Map{
 		"message": token,
 	})
 }
 
 func (h *userHandler) Login(ctx *fiber.Ctx) error {
 
-	return ctx.Status(200).JSON(&fiber.Map{
-		"message": "User created successfully",
+	user := dto.UserLogin{}
+
+	err := ctx.BodyParser(&user)
+
+	if err != nil {
+		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"message": "Please provide valid inputs",
+			"error":   err.Error(),
+		})
+	}
+
+	data, err := h.Controllers.Login(user.Email, user.Password)
+
+	if err != nil {
+		return ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{
+			"message": "Error trying to Login",
+			"error":   err.Error(),
+		})
+	}
+
+	return ctx.Status(http.StatusOK).JSON(&fiber.Map{
+		"message": data,
 	})
 }
 
