@@ -2,18 +2,23 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
+	"go-ecommerce-app/configs"
 	functions "go-ecommerce-app/internal/db.functions"
 	"go-ecommerce-app/internal/dto"
 	"go-ecommerce-app/internal/helper"
 	"go-ecommerce-app/internal/schema"
+	"go-ecommerce-app/pkg/notification"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 type UserContoller struct {
-	DB   functions.UserDBFunction
-	Auth helper.Auth
+	DB     functions.UserDBFunction
+	Auth   helper.Auth
+	Config configs.AppConfig
 }
 
 func (s UserContoller) SignUp(input dto.UserSignUp) (string, error) {
@@ -87,22 +92,22 @@ func (s UserContoller) Login(email, password string) (string, error) {
 	return token, nil
 }
 
-func (s UserContoller) GetVerificationCode(u *schema.User) (string, error) {
+func (s UserContoller) GetVerificationCode(u *schema.User) error {
 
 	user, err := s.DB.FindUserById(u.ID)
 
 	if err != nil {
-		return "", errors.New("cannot find user")
+		return errors.New("cannot find user")
 	}
 
 	if user.Verified {
-		return "", errors.New("user is already verified")
+		return errors.New("user is already verified")
 	}
 
 	token, err := helper.SecureNumericCode(6)
 
 	if err != nil {
-		return "", errors.New("failed to generate token")
+		return errors.New("failed to generate token")
 	}
 
 	user.Code = token
@@ -112,10 +117,19 @@ func (s UserContoller) GetVerificationCode(u *schema.User) (string, error) {
 	user, err = s.DB.UpdateUser(user.ID, user)
 
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return token, nil
+	notification := notification.InitializeNotification(s.Config)
+
+	message := fmt.Sprintf("Your verification code is: %v", user.Code)
+
+	if err := notification.SendSMS(user.Phone, message); err != nil {
+		log.Println("Failed to send SMS:", err)
+		return err
+	}
+
+	return nil
 }
 
 func (s UserContoller) VerifyCode(id uuid.UUID, input dto.UserVerifyCode) error {

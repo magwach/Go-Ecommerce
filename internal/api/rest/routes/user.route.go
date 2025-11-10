@@ -5,7 +5,6 @@ import (
 	"go-ecommerce-app/internal/controllers"
 	functions "go-ecommerce-app/internal/db.functions"
 	"go-ecommerce-app/internal/dto"
-	"go-ecommerce-app/internal/helper"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -13,15 +12,16 @@ import (
 
 type userHandler struct {
 	Controllers controllers.UserContoller
-	Auth        helper.Auth
 }
 
 func UserRoutes(restHand *rest.RestHandler) {
 	app := restHand.App
 
+
 	services := controllers.UserContoller{
-		DB:   functions.InitializeUserDBFunction(restHand.DB),
-		Auth: restHand.Auth,
+		DB:           functions.InitializeUserDBFunction(restHand.DB),
+		Auth:         restHand.Auth,
+		Config: restHand.Configuration,
 	}
 	handler := userHandler{Controllers: services}
 
@@ -102,8 +102,8 @@ func (h *userHandler) Login(ctx *fiber.Ctx) error {
 
 func (h *userHandler) GetVerificationCode(ctx *fiber.Ctx) error {
 
-	currentUser := h.Auth.GetCurrentUser(ctx)
-	token, err := h.Controllers.GetVerificationCode(&currentUser)
+	currentUser := h.Controllers.Auth.GetCurrentUser(ctx)
+	err := h.Controllers.GetVerificationCode(&currentUser)
 	if err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{
 			"message": "Failed to send token",
@@ -113,13 +113,12 @@ func (h *userHandler) GetVerificationCode(ctx *fiber.Ctx) error {
 
 	return ctx.Status(200).JSON(&fiber.Map{
 		"message": "token sent successfully",
-		"token":   token,
 	})
 }
 
 func (h *userHandler) VerifyCode(ctx *fiber.Ctx) error {
 
-	currentUser := h.Auth.GetCurrentUser(ctx)
+	currentUser := h.Controllers.Auth.GetCurrentUser(ctx)
 
 	input := dto.UserVerifyCode{}
 
@@ -155,7 +154,7 @@ func (h *userHandler) CreateProfile(ctx *fiber.Ctx) error {
 
 func (h *userHandler) GetProfile(ctx *fiber.Ctx) error {
 
-	user := h.Auth.GetCurrentUser(ctx)
+	user := h.Controllers.Auth.GetCurrentUser(ctx)
 
 	return ctx.Status(200).JSON(&fiber.Map{
 		"message": "User Retrieved",

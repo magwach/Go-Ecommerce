@@ -39,6 +39,7 @@ func StartServer(cfg configs.AppConfig) {
 		App:  v1Routes,
 		DB:   db,
 		Auth: auth,
+		Configuration: cfg,
 	}
 
 	setupRoutes(rh)
