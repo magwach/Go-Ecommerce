@@ -10,7 +10,7 @@ type Category struct {
 	ID           uuid.UUID `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
 	Name         string    `gorm:"index;unique;not null"`
 	Owner        uuid.UUID `gorm:"type:uuid;not null"`
-	DisplayOrder int       `gorm:"-"`
+	DisplayOrder int       `gorm:"column:display_order"`
 	User         *User     `gorm:"foreignKey:Owner;references:ID"`
 	Products     []Product `gorm:"foreignKey:CategoryId;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 	ImageUrl     string    `gorm:"default:null"`

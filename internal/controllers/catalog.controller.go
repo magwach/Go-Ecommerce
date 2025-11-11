@@ -27,16 +27,75 @@ func (r CatalogContoller) CreateCategory(id uuid.UUID, input dto.AddCategory) (d
 	}
 
 	category := schema.Category{
-		Name:     input.Name,
+		Name:     *input.Name,
 		Owner:    seller.ID,
-		ImageUrl: input.ImageUrl,
+		ImageUrl: *input.ImageUrl,
 	}
 
 	data, err := r.CatalogDB.CreateCategory(category)
 
 	if err != nil {
-		return dto.CategoryResponse{}, errors.New("failed to create category")
+		return dto.CategoryResponse{}, err
 	}
 
 	return dto.ToCategoryResponse(data), nil
+}
+
+func (r CatalogContoller) FindCategories() ([]dto.CategoryResponse, error) {
+
+	categories, err := r.CatalogDB.FindCategories()
+
+	if err != nil {
+		return []dto.CategoryResponse{}, errors.New("failed to find categories")
+	}
+
+	mashalledCategories := []dto.CategoryResponse{}
+
+	for _, category := range categories {
+		mashalledCategories = append(mashalledCategories, dto.ToCategoryResponse(*category))
+	}
+
+	return mashalledCategories, nil
+}
+
+func (r CatalogContoller) FindCategoryById(id uuid.UUID) (dto.CategoryResponse, error) {
+
+	category, err := r.CatalogDB.FindCategoryById(id)
+
+	if err != nil {
+		return dto.CategoryResponse{}, errors.New("failed to find category")
+	}
+
+	return dto.ToCategoryResponse(category), nil
+}
+
+func (r CatalogContoller) EditCategory(id uuid.UUID, input dto.AddCategory) (dto.CategoryResponse, error) {
+
+	category, err := r.CatalogDB.FindCategoryById(id)
+
+	if err != nil {
+		return dto.CategoryResponse{}, errors.New("failed to find category")
+	}
+
+	if input.Name != nil {
+		category.Name = *input.Name
+	}
+	if input.ImageUrl != nil {
+		category.ImageUrl = *input.ImageUrl
+	}
+
+	data, err := r.CatalogDB.EditCategory(id, category)
+
+	if err != nil {
+		return dto.CategoryResponse{}, errors.New("failed to edit category")
+	}
+
+	return dto.ToCategoryResponse(data), nil
+}
+
+func (r CatalogContoller) DeleteCategory(id uuid.UUID) error {
+	if err := r.CatalogDB.DeleteCategory(id); err != nil {
+		return errors.New("failed to delete category")
+	}
+	return nil
 }

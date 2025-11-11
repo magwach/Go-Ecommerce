@@ -24,6 +24,6 @@ type BecomeASeller struct {
 }
 
 type AddCategory struct {
-	Name     string `json:"name"`
-	ImageUrl string `json:"image_url"`
+	Name     *string `json:"name"`
+	ImageUrl *string `json:"image_url"`
 }
