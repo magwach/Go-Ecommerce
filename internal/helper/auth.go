@@ -95,7 +95,7 @@ func (r Auth) VerifyJWT(token string) (schema.User, error) {
 	return schema.User{}, errors.New("token verification failed")
 }
 
-func (r Auth) Authorize(ctx *fiber.Ctx) error {
+func (r Auth) UserAuthorize(ctx *fiber.Ctx) error {
 	authHeader := ctx.Get("Authorization")
 
 	user, err := r.VerifyJWT(authHeader)
@@ -108,6 +108,29 @@ func (r Auth) Authorize(ctx *fiber.Ctx) error {
 			"message": "authorization failed",
 			"error":   err.Error(),
 		})
+	}
+}
+
+func (r Auth) SellerAuthorize(ctx *fiber.Ctx) error {
+	authHeader := ctx.Get("Authorization")
+
+	user, err := r.VerifyJWT(authHeader)
+
+	if err != nil {
+		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"message": "authorization failed",
+			"error":   err.Error(),
+		})
+
+	} else if len(user.ID) < 1 && user.UserType != schema.SELLER {
+		return ctx.Status(http.StatusUnauthorized).JSON(&fiber.Map{
+			"message": "not authorized",
+			"error":   errors.New("you have to join the sellers first"),
+		})
+
+	} else {
+		ctx.Locals("user", user)
+		return ctx.Next()
 	}
 }
 

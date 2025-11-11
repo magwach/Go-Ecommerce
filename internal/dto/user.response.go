@@ -30,3 +30,25 @@ func ToUserResponse(u schema.User) UserResponse {
 		CreatedAt: u.CreatedAt,
 	}
 }
+
+type CategoryResponse struct {
+	ID           uuid.UUID `json:"id"`
+	Name         string    `json:"name"`
+	Owner        uuid.UUID `json:"owner"`
+	DisplayOrder int       `json:"display_order"`
+	ImageUrl     string    `json:"image_url"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+func ToCategoryResponse(cat schema.Category) CategoryResponse {
+	return CategoryResponse{
+		ID:           cat.ID,
+		Name:         cat.Name,
+		Owner:        cat.Owner,
+		DisplayOrder: cat.DisplayOrder,
+		ImageUrl:     cat.ImageUrl,
+		CreatedAt:    cat.CreatedAt,
+		UpdatedAt:    cat.UpdatedAt,
+	}
+}

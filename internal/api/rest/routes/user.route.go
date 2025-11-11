@@ -28,7 +28,7 @@ func UserRoutes(restHand *rest.RestHandler) {
 
 	publicRoutes := user.Group("")
 
-	privateRoutes := user.Group("/me", handler.Controllers.Auth.Authorize)
+	privateRoutes := user.Group("/me", restHand.Auth.UserAuthorize)
 
 	publicRoutes.Post("/signup", handler.SignUp)
 	publicRoutes.Post("/login", handler.Login)

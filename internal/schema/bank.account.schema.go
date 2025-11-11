@@ -7,12 +7,12 @@ import (
 )
 
 type BankAccount struct {
-	ID          uuid.UUID  `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
-	UserID      uuid.UUID  `gorm:"type:uuid;unique;not null"`
-	User        *User      `gorm:"foreignKey:UserID"`
-	BankAccount string     `gorm:"index;unique;not null"`
-	SwiftCode   string
-	PaymentType string     `gorm:"type:payment_type;not null"`
-	CreatedAt   time.Time  `gorm:"default:current_timestamp"`
-	UpdatedAt   time.Time  `gorm:"default:current_timestamp"`
+	ID          uuid.UUID `json:"id" gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
+	UserID      uuid.UUID `json:"user_id" gorm:"type:uuid;unique;not null"`
+	User        *User     `json:"-" gorm:"foreignKey:UserID"`
+	BankAccount string    `json:"bank_account" gorm:"index;unique;not null"`
+	SwiftCode   string    `json:"swift_code" gorm:"index;unique;not null"`
+	PaymentType string    `json:"payment_type" gorm:"type:payment_type;not null"`
+	CreatedAt   time.Time `json:"created_at" gorm:"default:current_timestamp"`
+	UpdatedAt   time.Time `json:"updated_at" gorm:"default:current_timestamp"`
 }

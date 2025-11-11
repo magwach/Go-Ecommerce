@@ -5,7 +5,6 @@ import (
 	"go-ecommerce-app/internal/api/rest"
 	"go-ecommerce-app/internal/api/rest/routes"
 	"go-ecommerce-app/internal/helper"
-	"go-ecommerce-app/internal/schema"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -26,25 +25,11 @@ func StartServer(cfg configs.AppConfig) {
 	}
 
 	log.Printf("Database Connected")
+	helper.RunExecs(db)
+	err = helper.RunMigrations(db)
 
-	db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`)
-	db.Exec(`
-			DO $$
-			BEGIN
-				IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_type') THEN
-					CREATE TYPE payment_type AS ENUM ('daily', 'weekly', 'monthly');
-				END IF;
-			END$$;
-			`)
-
-	err = db.AutoMigrate(&schema.User{})
 	if err != nil {
-		log.Fatalf("error running migrations: %v", err)
-	}
-
-	err = db.AutoMigrate(&schema.BankAccount{})
-	if err != nil {
-		log.Fatalf("error running migrations: %v", err)
+		log.Fatalf("database migrations error: %v", err)
 	}
 
 	v1Routes := app.Group("/api/v1")
@@ -70,4 +55,5 @@ func healthCheck(ctx *fiber.Ctx) error {
 
 func setupRoutes(restHand *rest.RestHandler) {
 	routes.UserRoutes(restHand)
+	routes.CatalogRoutes(restHand)
 }

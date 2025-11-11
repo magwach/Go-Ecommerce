@@ -22,3 +22,8 @@ type BecomeASeller struct {
 	SwiftCode         string `json:"swift_code"`
 	PaymentType       string `json:"payment_type"`
 }
+
+type AddCategory struct {
+	Name     string `json:"name"`
+	ImageUrl string `json:"image_url"`
+}

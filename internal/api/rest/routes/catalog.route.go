@@ -1,1 +1,113 @@
 package routes
+
+import (
+	"go-ecommerce-app/internal/api/rest"
+	"go-ecommerce-app/internal/controllers"
+	functions "go-ecommerce-app/internal/db.functions"
+	"go-ecommerce-app/internal/dto"
+	"net/http"
+
+	"github.com/gofiber/fiber/v2"
+)
+
+type catalogHandler struct {
+	Controllers controllers.CatalogContoller
+}
+
+func CatalogRoutes(restHand *rest.RestHandler) {
+	app := restHand.App
+
+	services := controllers.CatalogContoller{
+		CatalogDB: functions.InitializeCatalogDBFunction(restHand.DB),
+		UserDB:    functions.InitializeUserDBFunction(restHand.DB),
+		Auth:      restHand.Auth,
+		Config:    restHand.Configuration,
+	}
+	handler := catalogHandler{Controllers: services}
+
+	// app.Get("/products")
+	// app.Get("/products/:id")
+	// app.Get("/categories")
+	// app.Get("/categories/:id")
+
+	seller := app.Group("/seller")
+	privateRoutes := seller.Group("/", restHand.Auth.SellerAuthorize)
+
+	privateRoutes.Post("/categories", handler.CreateCategory)
+	privateRoutes.Patch("/categories/:id", handler.EditCategory)
+	privateRoutes.Delete("/categories/:id", handler.DeleteCategory)
+
+	privateRoutes.Post("/products", handler.CreateProduct)
+	privateRoutes.Get("/products", handler.GetProduct)
+	privateRoutes.Get("/products/:id", handler.GetProductById)
+	privateRoutes.Put("/products/:id", handler.EditProduct)
+	privateRoutes.Patch("/products/:id", handler.UpdateStock)
+	privateRoutes.Delete("/products/:id", handler.DeleteProduct)
+
+}
+
+func (r catalogHandler) CreateCategory(ctx *fiber.Ctx) error {
+
+	user := r.Controllers.Auth.GetCurrentUser(ctx)
+	id := user.ID
+
+	request := dto.AddCategory{}
+	err := ctx.BodyParser(&request)
+
+	if err != nil {
+		return rest.RespondWithError(ctx, http.StatusBadRequest, err)
+	}
+
+	data, err := r.Controllers.CreateCategory(id, request)
+
+	if err != nil {
+		return rest.RespondWithInternalError(ctx, err)
+	}
+
+	return rest.RespondWithSucess(ctx, http.StatusCreated, "category created", data)
+}
+
+func (r catalogHandler) EditCategory(ctx *fiber.Ctx) error {
+
+	return rest.RespondWithSucess(ctx, http.StatusCreated, "category created", nil)
+}
+
+func (r catalogHandler) DeleteCategory(ctx *fiber.Ctx) error {
+
+	return rest.RespondWithSucess(ctx, http.StatusCreated, "category created", nil)
+}
+
+func (r catalogHandler) CreateProduct(ctx *fiber.Ctx) error {
+
+	return rest.RespondWithSucess(ctx, http.StatusCreated, "category created", nil)
+}
+
+func (r catalogHandler) EditProduct(ctx *fiber.Ctx) error {
+
+	return rest.RespondWithSucess(ctx, http.StatusCreated, "category created", nil)
+}
+
+func (r catalogHandler) UpdateProduct(ctx *fiber.Ctx) error {
+
+	return rest.RespondWithSucess(ctx, http.StatusCreated, "category created", nil)
+}
+
+func (r catalogHandler) DeleteProduct(ctx *fiber.Ctx) error {
+
+	return rest.RespondWithSucess(ctx, http.StatusCreated, "category created", nil)
+}
+
+func (r catalogHandler) UpdateStock(ctx *fiber.Ctx) error {
+
+	return rest.RespondWithSucess(ctx, http.StatusCreated, "category created", nil)
+}
+
+func (r catalogHandler) GetProduct(ctx *fiber.Ctx) error {
+
+	return rest.RespondWithSucess(ctx, http.StatusCreated, "category created", nil)
+}
+
+func (r catalogHandler) GetProductById(ctx *fiber.Ctx) error {
+
+	return rest.RespondWithSucess(ctx, http.StatusCreated, "category created", nil)
+}
